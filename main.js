@@ -39,9 +39,14 @@ client.on('message', async message => {
 
     //Ensure member is in a voice channel and that bot can join it
     const voiceChannel = message.member.voice.channel;
+    
+    if((!voiceChannel)) {
+        return message.channel.send("You need to be in a voice channel to hear music or control its playback.");
+    };
+    
     const permissions = voiceChannel.permissionsFor(message.client.user);
-    if((!voiceChannel) || (!permissions.has("CONNECT")) || (!permissions.has("SPEAK"))) {
-        return message.channel.send("You need to be a voice channel that I can join to hear music!");
+    if((!permissions.has("CONNECT")) || (!permissions.has("SPEAK"))) {
+        return message.channel.send("You need to be in a voice channel that I can join to hear music!");
     };
 
     switch(args[0].toLowerCase()) {
@@ -55,13 +60,16 @@ client.on('message', async message => {
             skip(message, serverQueue);
             break;
         case prefix+"pause":
-            pause();
+            pause(message, serverQueue);
+            break;
+        case prefix+"resume":
+            resume(message, serverQueue);
             break;
         case prefix+"volume":
             setVolume(message, args, serverQueue);
             break;
         default:
-            message.channel.send("Invalid command! Choose one of the following options: !play !pause !stop !skip !volume")
+            message.channel.send("Invalid command! Choose one of the following options: !play !pause !resume !stop !skip !volume")
     }
 });
 
@@ -163,7 +171,27 @@ function stop(message, serverQueue) {
     serverQueue.connection.dispatcher.end();
 };
 
+//Pause playback
+function pause(message, serverQueue) {
+    if (!message.member.voice.channel)
+        return message.channel.send("You have to be in a voice channel to pause the music!");
+    if (!serverQueue)
+        return message.channel.send("There is no song playing!");
 
+    serverQueue.connection.dispatcher.pause();
+    message.channel.send("Pausing playback!");
+};
+
+//Resume playback
+function resume(message, serverQueue) {
+    if (!message.member.voice.channel)
+        return message.channel.send("You have to be in a voice channel to pause the music!");
+    if (!serverQueue)
+        return message.channel.send("There is no song playing!");
+
+    serverQueue.connection.dispatcher.resume();
+    message.channel.send("Resuming playback!");
+};
 
 
 
