@@ -49,16 +49,16 @@ client.on('message', async message => {
             addOrCreateQueue(message, args, serverQueue, voiceChannel);
             break;
         case prefix+"stop":
-            stop();
+            stop(message, serverQueue);
             break;
         case prefix+"skip":
-            skip();
+            skip(message, serverQueue);
             break;
         case prefix+"pause":
             pause();
             break;
         case prefix+"volume":
-            setVolume();
+            setVolume(message, args, serverQueue);
             break;
         default:
             message.channel.send("Invalid command! Choose one of the following options: !play !pause !stop !skip !volume")
@@ -85,7 +85,7 @@ async function addOrCreateQueue(message, args, serverQueue, voiceChannel) {
             voiceChannel: voiceChannel,
             connection: null,
             songs: [],
-            Volume: 10,
+            Volume: 3,
             playing: true
         };
 
@@ -126,8 +126,41 @@ function play(guild, song){
         })
         .on("error", error => console.error(error));
 
-    dispatcher.setVolume(0.3);
+    dispatcher.setVolume(0.1 * serverQueue.Volume);
     serverQueue.textChannel.send('Now playing: ~ ' + song.title + ' ~');
+};
+
+//Set Volume
+function setVolume(message, args, serverQueue) {
+    if (!message.member.voice.channel)
+        return message.channel.send("You have to be in a voice channel to set the volume!");
+    if (!serverQueue)
+        return message.channel.send("There is no song playing!");
+    serverQueue.connection.dispatcher.setVolume(parseInt(args[1]) * 0.1);
+    message.channel.send("Set volume to " + args[1]);
+};
+
+//Skip current song
+function skip(message, serverQueue) {
+    if (!message.member.voice.channel)
+        return message.channel.send("You have to be in a voice channel to skip the song!");
+    if (!serverQueue)
+        return message.channel.send("There is no song playing!");
+
+    serverQueue.connection.dispatcher.end();
+    message.channel.send("Skipping");
+};
+
+
+//Stop playback
+function stop(message, serverQueue) {
+    if (!message.member.voice.channel)
+        return message.channel.send("You have to be in a voice channel to stop the music!");
+    if (!serverQueue)
+        return message.channel.send("There is no song playing!");
+
+    serverQueue.songs = [];
+    serverQueue.connection.dispatcher.end();
 };
 
 
