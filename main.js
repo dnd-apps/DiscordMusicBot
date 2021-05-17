@@ -43,7 +43,7 @@ client.on('message', async message => {
     if((!voiceChannel)) {
         return message.channel.send("You need to be in a voice channel to hear music or control its playback.");
     };
-    
+
     const permissions = voiceChannel.permissionsFor(message.client.user);
     if((!permissions.has("CONNECT")) || (!permissions.has("SPEAK"))) {
         return message.channel.send("You need to be in a voice channel that I can join to hear music!");
@@ -73,7 +73,6 @@ client.on('message', async message => {
     }
 });
 
-client.login(token);
 
 
 //Function that creates song queues and invokes play function
@@ -108,7 +107,11 @@ async function addOrCreateQueue(message, args, serverQueue, voiceChannel) {
             play(message.guild, queueConstruct.songs[0]);
         } catch (err) {
             console.log(err);
-            queue.delete(message.guild.id);
+            if(err.startsWith('[VOICE_CONNECTION_TIMEOUT]')){
+                play(message.guild, queueConstruct.songs[0]);
+            } else {
+                queue.delete(message.guild.id);
+            }; 
             return message.channel.send("Something went wrong creating the queue!: " + err);
         }
     } else {
